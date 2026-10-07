@@ -22,30 +22,32 @@
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', 'Pretendard', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        body { font-family: 'Inter', 'Pretendard', sans-serif; transition: background-color 0.3s, color 0.3s; word-break: keep-all; }
         .glass-header { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* 스크롤바 커스텀 */
-        ::-webkit-scrollbar { width: 8px; }
+        /* 모바일 최적화 스크롤바 커스텀 */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100 min-h-screen pb-20">
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100 min-h-screen pb-20 w-full overflow-x-hidden">
 
     <!-- Header -->
     <header class="fixed top-0 w-full glass-header bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 z-40">
-        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
-            <div>
-                <h1 id="main-header-title" class="text-lg md:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-300">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center gap-2">
+            <div class="flex-1 min-w-0">
+                <h1 id="main-header-title" class="text-base md:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-300 truncate">
                     구글 워크스페이스 & 자동화 연수
                 </h1>
-                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">개발자: 가치있는 미래교육 연구소 대표 김병찬</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">개발자: 가치있는 미래교육 연구소 대표 김병찬</p>
             </div>
-            <div class="flex items-center gap-2 md:gap-4">
+            <div class="flex items-center gap-2 md:gap-4 shrink-0">
                 <!-- Admin Button -->
                 <button onclick="openAdminModal()" class="text-xs md:text-sm px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                     🔒 관리자 인증
@@ -59,25 +61,19 @@
         </div>
     </header>
 
-    <main class="max-w-6xl mx-auto px-4 pt-24 space-y-6 min-h-[calc(100vh-80px)] flex flex-col pb-20">
+    <main class="max-w-6xl mx-auto px-4 pt-24 space-y-6 min-h-[calc(100vh-80px)] flex flex-col pb-20 w-full overflow-hidden">
         
-        <!-- Tab Navigation -->
-        <nav class="flex overflow-x-auto border-b border-slate-200 dark:border-slate-700 gap-2 pb-2 scrollbar-hide">
-            <button onclick="switchTab('part1')" id="tab-part1" class="tab-btn active px-4 py-2.5 rounded-t-xl font-bold text-blue-600 border-b-2 border-blue-600 bg-blue-50/50 dark:bg-blue-900/20 dark:text-blue-400 whitespace-nowrap transition-all">Part 1. 워크스페이스 & 스크립트 기초</button>
-            <button onclick="switchTab('part2')" id="tab-part2" class="tab-btn px-4 py-2.5 rounded-t-xl font-medium text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 whitespace-nowrap transition-all">Part 2. 메일 발송 자동화</button>
-            <button onclick="switchTab('part3')" id="tab-part3" class="tab-btn px-4 py-2.5 rounded-t-xl font-medium text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 whitespace-nowrap transition-all">Part 3. 개별 시트 자동 생성</button>
-            <button onclick="switchTab('practice')" id="tab-practice" class="tab-btn px-4 py-2.5 rounded-t-xl font-medium text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 whitespace-nowrap transition-all flex items-center gap-1"><span class="text-blue-500">💻</span> 실습 자료</button>
-            <button onclick="switchTab('reference')" id="tab-reference" class="tab-btn px-4 py-2.5 rounded-t-xl font-medium text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 whitespace-nowrap transition-all flex items-center gap-1"><span class="text-indigo-500">🔗</span> 참고 사이트</button>
+        <!-- Tab Navigation (모바일 가로 스크롤 최적화) -->
+        <nav class="flex overflow-x-auto border-b border-slate-200 dark:border-slate-700 gap-2 pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 snap-x w-[calc(100%+2rem)] sm:w-full">
+            <button onclick="switchTab('part1')" id="tab-part1" class="tab-btn active px-4 py-2.5 rounded-t-xl font-bold text-blue-600 border-b-2 border-blue-600 bg-blue-50/50 dark:bg-blue-900/20 dark:text-blue-400 whitespace-nowrap transition-all shrink-0 snap-start text-sm md:text-base">Part 1. 워크스페이스 기초</button>
+            <button onclick="switchTab('part2')" id="tab-part2" class="tab-btn px-4 py-2.5 rounded-t-xl font-medium text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 whitespace-nowrap transition-all shrink-0 snap-start text-sm md:text-base">Part 2. 안내 메일 자동화</button>
+            <button onclick="switchTab('part3')" id="tab-part3" class="tab-btn px-4 py-2.5 rounded-t-xl font-medium text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 whitespace-nowrap transition-all shrink-0 snap-start text-sm md:text-base">Part 3. 개별 시트 자동 생성</button>
+            <button onclick="switchTab('practice')" id="tab-practice" class="tab-btn px-4 py-2.5 rounded-t-xl font-medium text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 whitespace-nowrap transition-all shrink-0 flex items-center gap-1 snap-start text-sm md:text-base"><span class="text-blue-500">💻</span> 실습 자료 <span id="practice-spinner" class="ml-1 w-3 h-3 border-2 border-slate-300 border-t-blue-500 rounded-full animate-spin"></span></button>
+            <button onclick="switchTab('reference')" id="tab-reference" class="tab-btn px-4 py-2.5 rounded-t-xl font-medium text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 whitespace-nowrap transition-all shrink-0 flex items-center gap-1 snap-start text-sm md:text-base"><span class="text-indigo-500">🔗</span> 참고 사이트</button>
         </nav>
 
-        <!-- Loading State -->
-        <div id="loading-indicator" class="flex flex-col items-center justify-center py-20 flex-1">
-            <div class="loader mb-4"></div>
-            <p class="text-slate-500 font-medium">구글 시트에서 실시간 교재 데이터를 불러오는 중입니다...</p>
-        </div>
-
-        <!-- Content Area -->
-        <div id="content-area" class="flex-1 hidden relative">
+        <!-- Content Area (즉시 렌더링) -->
+        <div id="content-area" class="flex-1 flex flex-col relative w-full">
             
             <!-- Part 1 Content -->
             <section id="section-part1" class="tab-content block animation-fade-in">
@@ -226,12 +222,13 @@
         // ==========================================
         // 🚨 여기에 구글 앱스 스크립트 웹 앱 URL을 붙여넣으세요! 🚨
         // ==========================================
-        const API_URL = "https://script.google.com/macros/s/AKfycbzDm6fpSfnQFJksupPhkey7B0SIHMbYiLfVtCBqTIwDfTtPzrQy3Se1GGOeFaq8-8g/exec"; 
+        const API_URL = "YOUR_WEB_APP_URL_HERE"; 
         
         // 원본 시트 주소
         const SHEET_URL = "https://docs.google.com/spreadsheets/d/1PdV-Pg7KOMur91KXpI9R7Up9PzqubVcaNeno60rQf9U/edit";
 
         let serverAdminPin = "";
+        const CACHE_KEY = "edu_dashboard_data_v1";
 
         // 탭 전환 기능
         function switchTab(tabId) {
@@ -254,11 +251,12 @@
                 targetSection.classList.add('block');
             }
 
-            // 선택된 탭 버튼 스타일 적용
+            // 선택된 탭 버튼 스타일 적용 및 모바일 뷰어 스크롤 이동
             const activeBtn = document.getElementById(`tab-${tabId}`);
             if(activeBtn) {
                 activeBtn.classList.remove('text-slate-500');
                 activeBtn.classList.add('text-blue-600', 'border-b-2', 'border-blue-600', 'bg-blue-50/50', 'dark:bg-blue-900/20', 'dark:text-blue-400');
+                activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
             }
         }
 
@@ -279,38 +277,59 @@
             document.documentElement.classList.add('dark');
         }
 
-        // 데이터 불러오기
+        // 데이터 적용 (UI 업데이트)
+        function applyDataToUI(data) {
+            serverAdminPin = data.adminPin;
+            
+            if(data.targetAudience) {
+                const titleEl = document.getElementById('main-header-title');
+                titleEl.innerHTML = `<span class="text-slate-800 dark:text-slate-100 text-sm md:text-base block mb-0.5">[${data.targetAudience}]</span>구글 워크스페이스 & 자동화 연수`;
+                document.title = `${data.targetAudience} - 구글 자동화 연수`;
+            }
+            
+            renderPracticeData(data.practiceData);
+            renderReferences(data.references);
+        }
+
+        // 데이터 불러오기 (캐싱을 이용한 로딩 속도 0초 최적화)
         async function fetchData() {
             if (API_URL === "YOUR_WEB_APP_URL_HERE") {
-                showToast("⚠️ API URL이 설정되지 않았습니다. 소스코드를 확인하세요.");
-                document.getElementById('loading-indicator').innerHTML = `<p class="text-red-500 font-bold">API URL을 HTML 코드에 입력해주세요.</p>`;
+                showToast("⚠️ 소스코드에서 API URL을 입력해주세요.");
+                document.getElementById('practice-container').innerHTML = `<p class="text-red-500 font-bold p-4">API URL을 HTML 코드에 입력해주세요.</p>`;
+                const spinner = document.getElementById('practice-spinner');
+                if(spinner) spinner.classList.add('hidden');
                 return;
             }
 
+            // 1. 브라우저에 저장된 이전 데이터가 있으면 로딩 없이 즉시 렌더링
+            const cachedData = localStorage.getItem(CACHE_KEY);
+            if (cachedData) {
+                try {
+                    const parsedData = JSON.parse(cachedData);
+                    applyDataToUI(parsedData);
+                } catch(e) {}
+            }
+
+            // 2. 백그라운드에서 최신 데이터를 가져옴 (사용자는 대기하지 않음)
             try {
                 const response = await fetch(API_URL, { redirect: 'follow' });
                 const data = await response.json();
                 
-                serverAdminPin = data.adminPin;
+                // 최신 데이터를 로컬 스토리지에 저장
+                localStorage.setItem(CACHE_KEY, JSON.stringify(data));
                 
-                // 설정 시트에서 받아온 연수 대상자로 타이틀 업데이트
-                if(data.targetAudience) {
-                    const titleEl = document.getElementById('main-header-title');
-                    titleEl.innerHTML = `<span class="text-slate-800 dark:text-slate-100">[${data.targetAudience}]</span> <br class="md:hidden">구글 워크스페이스 & 자동화 연수`;
-                    document.title = `${data.targetAudience} - 구글 자동화 연수`;
-                }
-                
-                renderPracticeData(data.practiceData);
-                renderReferences(data.references);
-
-                // 로딩 인디케이터 숨기고 컨텐츠 영역 보이기
-                document.getElementById('loading-indicator').classList.add('hidden');
-                document.getElementById('content-area').classList.remove('hidden');
-                document.getElementById('content-area').classList.add('flex'); // h-full 적용을 위해 flex 추가
+                // 최신 데이터로 UI 조용히 갱신
+                applyDataToUI(data);
 
             } catch (error) {
                 console.error("데이터 로드 실패:", error);
-                document.getElementById('loading-indicator').innerHTML = `<p class="text-red-500">데이터를 불러오는데 실패했습니다. 네트워크를 확인하세요.</p>`;
+                if (!cachedData) {
+                    document.getElementById('practice-container').innerHTML = `<p class="text-red-500 p-4">데이터 연결에 실패했습니다. 인터넷을 확인하세요.</p>`;
+                }
+            } finally {
+                // 상단 탭의 작은 로딩 스피너 숨기기
+                const spinner = document.getElementById('practice-spinner');
+                if(spinner) spinner.classList.add('hidden');
             }
         }
 
