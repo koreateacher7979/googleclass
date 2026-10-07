@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ko" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>구글 워크스페이스 & 업무 자동화 연수 대시보드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Pretendard', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#3b82f6', // Blue 500
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', 'Pretendard', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        .glass-header { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* 스크롤바 커스텀 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100 min-h-screen pb-20">
+
+    <!-- Header -->
+    <header class="fixed top-0 w-full glass-header bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div>
+                <h1 class="text-lg md:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-600">
+                    자동화 연수 대시보드
+                </h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">개발자: 가치있는 미래교육 연구소 대표 김병찬</p>
+            </div>
+            <div class="flex items-center gap-2 md:gap-4">
+                <!-- Admin Button -->
+                <button onclick="openAdminModal()" class="text-xs md:text-sm px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                    🔒 관리자 인증
+                </button>
+                <!-- Theme Toggle -->
+                <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition" aria-label="Toggle Theme">
+                    <svg id="theme-icon-light" class="w-5 h-5 hidden dark:block text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <svg id="theme-icon-dark" class="w-5 h-5 block dark:hidden text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 pt-24 space-y-10">
+        <!-- Intro Section -->
+        <section class="bg-white dark:bg-slate-800 rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-700">
+            <h2 class="text-2xl font-bold mb-4">🚀 구글 워크스페이스 & 앱스스크립트 문서 자동화 (3시간)</h2>
+            <p class="text-slate-600 dark:text-slate-300 mb-6 leading-relaxed">
+                반복되는 학교 업무를 획기적으로 줄일 수 있는 '컨테이너형 앱스스크립트' 활용법을 알아봅니다.<br>
+                생성형 AI를 활용하여 코딩 지식 없이도 실무에 바로 적용 가능한 자동화 스크립트를 작성해 봅니다.
+            </p>
+            <div class="grid md:grid-cols-3 gap-4">
+                <div class="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                    <span class="text-blue-500 font-bold">1교시</span>
+                    <h3 class="font-semibold mt-1">워크스페이스 기초 & 스크립트 이해</h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">앱스스크립트 개념, 생성형 AI와의 만남</p>
+                </div>
+                <div class="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-blue-200 dark:border-blue-900">
+                    <span class="text-blue-500 font-bold">2교시 (기초실습)</span>
+                    <h3 class="font-semibold mt-1">과제 미제출자 자동 안내</h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">이메일 일괄 자동 발송 스크립트 구현</p>
+                </div>
+                <div class="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-indigo-200 dark:border-indigo-900">
+                    <span class="text-indigo-500 font-bold">3교시 (심화실습)</span>
+                    <h3 class="font-semibold mt-1">기초조사서 개별시트 생성</h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">수합된 폼 데이터를 개인별 양식으로 자동 분할</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Loading State -->
+        <div id="loading-indicator" class="flex flex-col items-center justify-center py-10">
+            <div class="loader mb-4"></div>
+            <p class="text-slate-500 font-medium">구글 시트에서 실시간 데이터를 불러오는 중입니다...</p>
+        </div>
+
+        <!-- Practice Data Section -->
+        <section id="practice-section" class="hidden">
+            <div class="flex items-center gap-2 mb-6">
+                <div class="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center text-white font-bold">💻</div>
+                <h2 class="text-xl md:text-2xl font-bold">실습 자료 및 프롬프트</h2>
+            </div>
+            <div id="practice-container" class="grid md:grid-cols-2 gap-6">
+                <!-- 실습 데이터가 여기에 동적으로 삽입됩니다. -->
+            </div>
+        </section>
+
+        <!-- Reference Data Section -->
+        <section id="reference-section" class="hidden pb-10">
+            <div class="flex items-center gap-2 mb-6">
+                <div class="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center text-white font-bold">🔗</div>
+                <h2 class="text-xl md:text-2xl font-bold">참고 사이트 모음</h2>
+            </div>
+            <div id="reference-container" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- 참고 사이트가 여기에 동적으로 삽입됩니다. -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Admin Modal -->
+    <div id="admin-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 transition-opacity">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm p-6 shadow-2xl scale-95 transition-transform" id="admin-modal-content">
+            <h3 class="text-xl font-bold mb-2">관리자 인증</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">데이터 원본 시트로 이동하려면 인증번호를 입력하세요.</p>
+            <input type="password" id="admin-pin" placeholder="인증번호 입력" class="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4">
+            <div class="flex gap-2">
+                <button onclick="closeAdminModal()" class="flex-1 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 font-medium transition">취소</button>
+                <button onclick="verifyAdmin()" class="flex-1 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Modal -->
+    <div id="qr-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4" onclick="closeQrModal(event)">
+        <div class="bg-white p-4 rounded-xl shadow-2xl relative" id="qr-modal-content">
+            <button onclick="closeQrModal(event, true)" class="absolute -top-3 -right-3 w-8 h-8 bg-slate-800 text-white rounded-full flex items-center justify-center hover:bg-slate-900 shadow-lg">✕</button>
+            <img id="qr-large-img" src="" alt="Large QR Code" class="w-64 h-64 object-contain">
+        </div>
+    </div>
+
+    <!-- Custom Toast Message -->
+    <div id="toast-message" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-lg opacity-0 pointer-events-none transition-opacity duration-300 z-50 flex items-center gap-2">
+        <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+        <span id="toast-text">복사되었습니다!</span>
+    </div>
+
+    <script>
+        // ==========================================
+        // 🚨 여기에 구글 앱스 스크립트 웹 앱 URL을 붙여넣으세요! 🚨
+        // ==========================================
+        const API_URL = "https://script.google.com/macros/s/AKfycbyJ8xiQhRuSjSRnTcZdQsQGCdQtDA7oTKf7zSxCgE3umhCe826H77UP809ytpwN1do/exec"; 
+        
+        // 원본 시트 주소
+        const SHEET_URL = "https://docs.google.com/spreadsheets/d/1PdV-Pg7KOMur91KXpI9R7Up9PzqubVcaNeno60rQf9U/edit";
+
+        let serverAdminPin = "";
+
+        // 테마 설정
+        function toggleTheme() {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // 초기 테마 로드
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+
+        // 데이터 불러오기
+        async function fetchData() {
+            if (API_URL === "YOUR_WEB_APP_URL_HERE") {
+                showToast("⚠️ API URL이 설정되지 않았습니다. 소스코드를 확인하세요.");
+                document.getElementById('loading-indicator').innerHTML = `<p class="text-red-500 font-bold">API URL을 HTML 코드에 입력해주세요.</p>`;
+                return;
+            }
+
+            try {
+                // 구글 스크립트 배포 시 리디렉션이 발생하므로 redirect: 'follow' 필수
+                const response = await fetch(API_URL, { redirect: 'follow' });
+                const data = await response.json();
+                
+                serverAdminPin = data.adminPin;
+                
+                renderPracticeData(data.practiceData);
+                renderReferences(data.references);
+
+                document.getElementById('loading-indicator').classList.add('hidden');
+                document.getElementById('practice-section').classList.remove('hidden');
+                document.getElementById('reference-section').classList.remove('hidden');
+
+            } catch (error) {
+                console.error("데이터 로드 실패:", error);
+                document.getElementById('loading-indicator').innerHTML = `<p class="text-red-500">데이터를 불러오는데 실패했습니다. 네트워크를 확인하세요.</p>`;
+            }
+        }
+
+        // URL 판별 정규식
+        const isUrl = (str) => /^(https?:\/\/)/.test(str.trim());
+
+        // 실습 데이터 렌더링
+        function renderPracticeData(data) {
+            const container = document.getElementById('practice-container');
+            container.innerHTML = '';
+
+            if(!data || data.length === 0) {
+                container.innerHTML = '<p class="text-slate-500">등록된 실습 데이터가 없습니다.</p>';
+                return;
+            }
+
+            data.forEach((item, index) => {
+                const content = item.content.trim();
+                const isLink = isUrl(content);
+                const cardId = `practice-${index}`;
+
+                let innerHtml = '';
+
+                if (isLink) {
+                    // 링크형 컨텐츠 (URL + QR)
+                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(content)}`;
+                    innerHtml = `
+                        <div class="flex gap-4">
+                            <div class="shrink-0 flex flex-col gap-2 items-center">
+                                <div class="bg-white p-1.5 rounded-lg border border-slate-200">
+                                    <img src="${qrUrl}" alt="QR" class="w-16 h-16 object-cover">
+                                </div>
+                                <button onclick="openQrModal('${qrUrl}')" class="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded w-full hover:bg-slate-200 dark:hover:bg-slate-600 transition">🔍 확대</button>
+                            </div>
+                            <div class="flex-1 flex flex-col justify-center">
+                                <a href="${content}" target="_blank" class="w-full flex items-center justify-between bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-400 p-4 rounded-xl transition border border-blue-100 dark:border-blue-800">
+                                    <span class="font-medium">원클릭으로 이동하기</span>
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // 텍스트형 컨텐츠 (프롬프트 복사)
+                    // 줄바꿈 보존을 위해 이스케이프 처리
+                    const safeContent = content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    innerHtml = `
+                        <div class="relative group mt-2">
+                            <pre class="bg-slate-100 dark:bg-slate-900 p-4 rounded-xl text-sm font-mono text-slate-700 dark:text-slate-300 overflow-x-auto whitespace-pre-wrap border border-slate-200 dark:border-slate-700 max-h-48 overflow-y-auto" id="text-${cardId}">${safeContent}</pre>
+                            <button onclick="copyText('text-${cardId}')" class="absolute top-2 right-2 bg-white/90 dark:bg-slate-800/90 hover:bg-blue-500 hover:text-white dark:hover:bg-blue-500 text-slate-600 dark:text-slate-300 px-3 py-1.5 rounded-lg shadow-sm border border-slate-200 dark:border-slate-600 text-xs font-bold transition flex items-center gap-1 backdrop-blur-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                프롬프트 복사
+                            </button>
+                        </div>
+                    `;
+                }
+
+                const card = document.createElement('div');
+                card.className = "bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-md transition duration-300 flex flex-col h-full";
+                card.innerHTML = `
+                    <h3 class="text-lg font-bold mb-3 text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                        ${item.title}
+                    </h3>
+                    ${innerHtml}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 참고 사이트 렌더링
+        function renderReferences(data) {
+            const container = document.getElementById('reference-container');
+            container.innerHTML = '';
+
+            if(!data || data.length === 0) {
+                container.innerHTML = '<p class="text-slate-500">등록된 참고 사이트가 없습니다.</p>';
+                return;
+            }
+
+            data.forEach(item => {
+                const card = document.createElement('a');
+                card.href = item.link;
+                card.target = "_blank";
+                card.className = "flex items-center gap-3 p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md transition group";
+                card.innerHTML = `
+                    <div class="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 flex items-center justify-center group-hover:scale-110 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                    </div>
+                    <div class="flex-1 truncate">
+                        <h4 class="font-bold text-slate-800 dark:text-slate-200 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">${item.title}</h4>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 복사 기능
+        function copyText(elementId) {
+            const el = document.getElementById(elementId);
+            const textToCopy = el.innerText;
+
+            const tempTextArea = document.createElement("textarea");
+            tempTextArea.value = textToCopy;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempTextArea);
+
+            showToast("프롬프트가 클립보드에 복사되었습니다!");
+        }
+
+        // 토스트 메시지
+        function showToast(msg) {
+            const toast = document.getElementById('toast-message');
+            document.getElementById('toast-text').innerText = msg;
+            toast.classList.remove('opacity-0');
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+            }, 2500);
+        }
+
+        // 모달 관리 로직
+        function openAdminModal() {
+            const modal = document.getElementById('admin-modal');
+            const content = document.getElementById('admin-modal-content');
+            document.getElementById('admin-pin').value = '';
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeAdminModal() {
+            const modal = document.getElementById('admin-modal');
+            const content = document.getElementById('admin-modal-content');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        function verifyAdmin() {
+            const input = document.getElementById('admin-pin').value.trim();
+            if(!serverAdminPin) {
+                showToast("데이터 로딩 중입니다. 잠시 후 다시 시도해주세요.");
+                return;
+            }
+            
+            if (input === serverAdminPin) {
+                closeAdminModal();
+                showToast("인증 성공! 데이터 시트로 이동합니다.");
+                setTimeout(() => {
+                    window.open(SHEET_URL, '_blank');
+                }, 1000);
+            } else {
+                showToast("❌ 인증번호가 일치하지 않습니다.");
+            }
+        }
+
+        // QR 모달
+        function openQrModal(url) {
+            document.getElementById('qr-large-img').src = url;
+            document.getElementById('qr-modal').classList.remove('hidden');
+        }
+
+        function closeQrModal(e, force = false) {
+            if(force || e.target.id === 'qr-modal') {
+                document.getElementById('qr-modal').classList.add('hidden');
+            }
+        }
+
+        // 엔터키 지원
+        document.getElementById('admin-pin').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                verifyAdmin();
+            }
+        });
+
+        // 초기 실행
+        window.onload = fetchData;
+    </script>
+</body>
+</html>
