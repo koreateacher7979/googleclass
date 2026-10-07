@@ -48,6 +48,11 @@
                 <p class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">개발자: 가치있는 미래교육 연구소 대표 김병찬</p>
             </div>
             <div class="flex items-center gap-2 md:gap-4 shrink-0">
+                <!-- Sync Status Indicator (추가됨) -->
+                <div id="sync-status" class="hidden items-center gap-1.5 px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                    <svg class="w-3 h-3 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <span class="hidden sm:inline">동기화 중</span>
+                </div>
                 <!-- Admin Button -->
                 <button onclick="openAdminModal()" class="text-xs md:text-sm px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                     🔒 관리자 인증
@@ -220,15 +225,15 @@
 
     <script>
         // ==========================================
-        // 🚨 여기에 구글 앱스 스크립트 웹 앱 URL을 붙여넣으세요! 🚨
+        // 🚨 구글 시트 ID (이제 앱스스크립트는 사용하지 않습니다!) 🚨
         // ==========================================
-        const API_URL = "https://script.google.com/macros/s/AKfycbzDm6fpSfnQFJksupPhkey7B0SIHMbYiLfVtCBqTIwDfTtPzrQy3Se1GGOeFaq8-8g/exec"; 
+        const SHEET_ID = "1PdV-Pg7KOMur91KXpI9R7Up9PzqubVcaNeno60rQf9U"; 
         
         // 원본 시트 주소
-        const SHEET_URL = "https://docs.google.com/spreadsheets/d/1PdV-Pg7KOMur91KXpI9R7Up9PzqubVcaNeno60rQf9U/edit";
+        const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`;
 
         let serverAdminPin = "";
-        const CACHE_KEY = "edu_dashboard_data_v1";
+        const CACHE_KEY = "edu_dashboard_data_v2";
 
         // 탭 전환 기능
         function switchTab(tabId) {
@@ -291,44 +296,86 @@
             renderReferences(data.references);
         }
 
-        // 데이터 불러오기 (캐싱을 이용한 로딩 속도 0초 최적화)
-        async function fetchData() {
-            if (API_URL === "YOUR_WEB_APP_URL_HERE") {
-                showToast("⚠️ 소스코드에서 API URL을 입력해주세요.");
-                document.getElementById('practice-container').innerHTML = `<p class="text-red-500 font-bold p-4">API URL을 HTML 코드에 입력해주세요.</p>`;
-                const spinner = document.getElementById('practice-spinner');
-                if(spinner) spinner.classList.add('hidden');
-                return;
+        // 구글 시트 GViz 데이터 직접 호출 (속도 0.5초 이내 최적화)
+        async function fetchSheetData(sheetName) {
+            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+            const response = await fetch(url);
+            const text = await response.text();
+            
+            // JSONP 응답에서 순수 JSON만 추출
+            const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\);/);
+            if (!match) return [];
+            
+            const json = JSON.parse(match[1]);
+            const rows = [];
+            
+            if (json.table && json.table.rows) {
+                json.table.rows.forEach(r => {
+                    // 각 셀의 값(v) 추출, 없으면 빈 문자열
+                    const rowData = r.c.map(cell => cell ? (cell.v !== null && cell.v !== undefined ? cell.v : '') : '');
+                    rows.push(rowData);
+                });
             }
+            return rows;
+        }
 
-            // 1. 브라우저에 저장된 이전 데이터가 있으면 로딩 없이 즉시 렌더링
+        // 데이터 불러오기 (초고속 동기화)
+        async function fetchData() {
+            const syncStatus = document.getElementById('sync-status');
+            const spinner = document.getElementById('practice-spinner');
+            
+            if(syncStatus) {
+                syncStatus.classList.remove('hidden');
+                syncStatus.classList.add('flex');
+            }
+            if(spinner) spinner.classList.remove('hidden');
+
+            // 1. 브라우저 저장 데이터 즉시 렌더링
             const cachedData = localStorage.getItem(CACHE_KEY);
             if (cachedData) {
-                try {
-                    const parsedData = JSON.parse(cachedData);
-                    applyDataToUI(parsedData);
-                } catch(e) {}
+                try { applyDataToUI(JSON.parse(cachedData)); } catch(e) {}
             }
 
-            // 2. 백그라운드에서 최신 데이터를 가져옴 (사용자는 대기하지 않음)
+            // 2. 백그라운드 초고속 동기화 (Apps Script 우회)
             try {
-                const response = await fetch(API_URL, { redirect: 'follow' });
-                const data = await response.json();
+                // 3개의 시트를 병렬로 동시 호출하여 속도 극대화
+                const [settings, refs, practices] = await Promise.all([
+                    fetchSheetData('설정'),
+                    fetchSheetData('참고사이트'),
+                    fetchSheetData('실습데이터')
+                ]);
+
+                const data = {
+                    adminPin: settings.length > 0 && settings[0][0] ? String(settings[0][0]) : "0000",
+                    targetAudience: settings.length > 0 && settings[0][1] ? String(settings[0][1]) : "선생님",
+                    references: refs.map(r => ({ title: r[0], link: r[1] })).filter(r => r.title),
+                    practiceData: practices.map(r => ({ title: r[0], content: r[1] })).filter(r => r.title)
+                };
                 
-                // 최신 데이터를 로컬 스토리지에 저장
                 localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-                
-                // 최신 데이터로 UI 조용히 갱신
                 applyDataToUI(data);
 
+                // 동기화 완료 UI 표시
+                if(syncStatus) {
+                    syncStatus.innerHTML = `<svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span class="text-green-600 dark:text-green-400 font-bold">동기화 완료!</span>`;
+                    setTimeout(() => {
+                        syncStatus.classList.add('hidden');
+                        syncStatus.classList.remove('flex');
+                        // 상태 원상복구
+                        setTimeout(() => {
+                            syncStatus.innerHTML = `<svg class="w-3 h-3 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="hidden sm:inline">동기화 중</span>`;
+                        }, 500);
+                    }, 2000);
+                }
             } catch (error) {
                 console.error("데이터 로드 실패:", error);
+                if(syncStatus) {
+                    syncStatus.innerHTML = `<span class="text-red-500 font-bold">동기화 실패(공유권한 확인)</span>`;
+                }
                 if (!cachedData) {
-                    document.getElementById('practice-container').innerHTML = `<p class="text-red-500 p-4">데이터 연결에 실패했습니다. 인터넷을 확인하세요.</p>`;
+                    document.getElementById('practice-container').innerHTML = `<p class="text-red-500 p-4">데이터를 불러오지 못했습니다. 원본 구글 시트의 공유 권한이 '링크가 있는 모든 사용자'로 설정되어 있는지 확인해주세요.</p>`;
                 }
             } finally {
-                // 상단 탭의 작은 로딩 스피너 숨기기
-                const spinner = document.getElementById('practice-spinner');
                 if(spinner) spinner.classList.add('hidden');
             }
         }
