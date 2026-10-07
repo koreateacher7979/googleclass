@@ -230,7 +230,7 @@
         const SHEET_ID = "1PdV-Pg7KOMur91KXpI9R7Up9PzqubVcaNeno60rQf9U"; 
         
         // 원본 시트 주소
-        const SHEET_URL = `https://docs.google.com/spreadsheets/d/1PdV-Pg7KOMur91KXpI9R7Up9PzqubVcaNeno60rQf9U/edit`;
+        const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`;
 
         let serverAdminPin = "";
         const CACHE_KEY = "edu_dashboard_data_v2";
@@ -296,27 +296,53 @@
             renderReferences(data.references);
         }
 
-        // 구글 시트 GViz 데이터 직접 호출 (속도 0.5초 이내 최적화)
+        // 구글 시트 GViz 데이터 직접 호출 (속도 0.5초 이내 최적화 및 오류 방어)
         async function fetchSheetData(sheetName) {
-            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
-            const response = await fetch(url);
-            const text = await response.text();
-            
-            // JSONP 응답에서 순수 JSON만 추출
-            const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\);/);
-            if (!match) return [];
-            
-            const json = JSON.parse(match[1]);
-            const rows = [];
-            
-            if (json.table && json.table.rows) {
-                json.table.rows.forEach(r => {
-                    // 각 셀의 값(v) 추출, 없으면 빈 문자열
-                    const rowData = r.c.map(cell => cell ? (cell.v !== null && cell.v !== undefined ? cell.v : '') : '');
-                    rows.push(rowData);
-                });
+            try {
+                // headers=1을 추가하여 1행을 헤더로 강제 지정 (2행부터 rows에 담김)
+                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(sheetName)}`;
+                const response = await fetch(url);
+                const text = await response.text();
+                
+                // 권한이 없어서 로그인 페이지로 리다이렉트된 경우 감지
+                if (text.includes('<html') || text.includes('Sign in')) {
+                    throw new Error("PERMISSION_DENIED");
+                }
+                
+                // JSONP 응답에서 순수 JSON만 추출
+                const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\);/);
+                if (!match) return [];
+                
+                const json = JSON.parse(match[1]);
+                if (json.status === 'error') {
+                    console.error("GViz Error:", json.errors);
+                    return [];
+                }
+
+                const rows = [];
+                if (json.table && json.table.rows) {
+                    json.table.rows.forEach(r => {
+                        // 빈 행 방어 로직 (시트 중간에 완전한 빈 줄이 있을 때 오류 방지)
+                        if (!r.c) return;
+                        
+                        const rowData = r.c.map(cell => {
+                            if (!cell) return '';
+                            // 서식이 지정된 텍스트(f)가 있으면 우선 적용, 없으면 원시 데이터(v)
+                            return cell.f !== undefined && cell.f !== null ? String(cell.f) : (cell.v !== null && cell.v !== undefined ? String(cell.v) : '');
+                        });
+                        
+                        // 모든 데이터가 빈칸이 아닌 경우에만 유효 데이터로 추가
+                        if (rowData.some(val => val.trim() !== '')) {
+                            rows.push(rowData);
+                        }
+                    });
+                }
+                return rows;
+            } catch (e) {
+                console.error(`[${sheetName}] 데이터 로드 에러:`, e);
+                if (e.message === "PERMISSION_DENIED") throw e; // 권한 에러는 상위로 전달
+                return [];
             }
-            return rows;
         }
 
         // 데이터 불러오기 (초고속 동기화)
@@ -336,7 +362,7 @@
                 try { applyDataToUI(JSON.parse(cachedData)); } catch(e) {}
             }
 
-            // 2. 백그라운드 초고속 동기화 (Apps Script 우회)
+            // 2. 백그라운드 초고속 동기화
             try {
                 // 3개의 시트를 병렬로 동시 호출하여 속도 극대화
                 const [settings, refs, practices] = await Promise.all([
@@ -345,6 +371,7 @@
                     fetchSheetData('실습데이터')
                 ]);
 
+                // 데이터 구조화 (GViz headers=1 설정으로 배열의 [0]번째 인덱스가 실제 2행 데이터가 됨)
                 const data = {
                     adminPin: settings.length > 0 && settings[0][0] ? String(settings[0][0]) : "0000",
                     targetAudience: settings.length > 0 && settings[0][1] ? String(settings[0][1]) : "선생님",
@@ -369,11 +396,21 @@
                 }
             } catch (error) {
                 console.error("데이터 로드 실패:", error);
-                if(syncStatus) {
-                    syncStatus.innerHTML = `<span class="text-red-500 font-bold">동기화 실패(공유권한 확인)</span>`;
-                }
-                if (!cachedData) {
-                    document.getElementById('practice-container').innerHTML = `<p class="text-red-500 p-4">데이터를 불러오지 못했습니다. 원본 구글 시트의 공유 권한이 '링크가 있는 모든 사용자'로 설정되어 있는지 확인해주세요.</p>`;
+                
+                // ⚠️ 권한 에러 처리 (가장 흔한 원인)
+                if (error.message === "PERMISSION_DENIED") {
+                    if(syncStatus) syncStatus.innerHTML = `<span class="text-red-500 font-bold">⚠️ 공유 권한 제한됨</span>`;
+                    
+                    const errorMsg = `
+                        <div class="col-span-full p-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-center">
+                            <h3 class="text-lg font-bold text-red-600 dark:text-red-400 mb-2">🚨 데이터를 불러올 수 없습니다.</h3>
+                            <p class="text-slate-600 dark:text-slate-300">원본 구글 스프레드시트의 공유 권한이 제한되어 있습니다.<br>시트 우측 상단의 <strong>[공유]</strong> 버튼을 누르고 일반 액세스를 <strong>'링크가 있는 모든 사용자'</strong>로 변경해 주세요.</p>
+                        </div>
+                    `;
+                    document.getElementById('practice-container').innerHTML = errorMsg;
+                    document.getElementById('reference-container').innerHTML = errorMsg;
+                } else {
+                    if(syncStatus) syncStatus.innerHTML = `<span class="text-red-500 font-bold">동기화 실패</span>`;
                 }
             } finally {
                 if(spinner) spinner.classList.add('hidden');
